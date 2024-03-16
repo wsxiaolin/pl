@@ -1,0 +1,39 @@
+data:text/html,<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浏览器指纹信息</title>
+<script src="https://openfpcdn.io/fingerprintjs/v4/iife.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+  }
+  h1 {
+    color: #333;
+  }
+  #visitor-id {
+    font-weight: bold;
+    color: #007bff;
+  }
+</style>
+</head>
+<body>
+<h1>浏览器指纹信息</h1>
+<p>您的ID是： <span id="visitor-id">Loading...</span></p>
+
+<script>
+
+var fpPromise = FingerprintJS.load();
+
+fpPromise
+  .then(fp => fp.get())
+  .then(result => {
+    document.getElementById('visitor-id').innerText = result.visitorId;
+  });
+</script>
+</body>
+</html>
+
