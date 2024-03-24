@@ -1,0 +1,45 @@
+name: Periodic Data Fetch and Save
+on:
+  schedule:
+    # 中国标准时间（CST，UTC+08:00）每两小时从早上8点到晚上10点
+    - cron: '0 */2 8-22 * *'
+
+jobs:
+  fetch-and-store-data:
+    runs-on: ubuntu-latest
+    steps:
+      # 设置时区为中国上海
+      - name: Setup timezone
+        run: sudo timedatectl set-timezone Asia/Shanghai
+
+      # 获取当前日期和时间
+      - name: Get current date and time
+        id: datetime
+        run: echo "::set-output name=datetime::$(date +'%Y-%m-%d-%H%M%S')"
+
+      # 执行 GET 请求并获取响应数据
+      - name: Fetch data from API
+        id: fetch_data
+        run: |
+          response=$(curl -s https://physics-api-cn.turtlesim.com/Users)
+          echo "$response" > data/${{ steps.datetime.outputs.datetime }}.json
+
+      # 添加文件到 Git 提交
+      - name: Add data file to git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/${{ steps.datetime.outputs.datetime }}.json
+
+      # 提交并推送更改到仓库
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v7
+        with:
+          message: "Automated update of /data/${{ steps.datetime.outputs.datetime }}.json"
+          branch: main
+          add: "data/${{ steps.datetime.outputs.datetime }}.json"
+          commit-message: "Update API data at ${{ steps.datetime.outputs.datetime }}"
+          push: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 注：确保 GitHub Secrets 中有一个名为 GITHUB_TOKEN 的访问令牌，用于授权提交更改到仓库
