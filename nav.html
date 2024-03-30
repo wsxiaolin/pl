@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>批量序列号转换工具</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.css">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f2f2f2;
+  }
+  .header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+  }
+  .container {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 600px;
+  }
+  .title {
+    margin-top: 0;
+  }
+  .input-area {
+    width: 100%;
+    box-sizing: border-box;
+    height: 100px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: none;
+  }
+  .btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  .output-area {
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="header">批量序列号转换工具</div>
+  <div class="container">
+    <div class="box3">
+      <h4 class="title">物理实验室工具--批量序列号转时间</h4>
+      <textarea id="inputTextArea" class="input-area" placeholder="输入序列号，每行一个"></textarea>
+      <div align="center">
+        <button class="btn" onclick="convertSerialToTime()">开始转换</button>
+      </div>
+      <div id="outputDisplay" class="output-area"></div>
+    </div>
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+<script>
+  function convertSerialToTime() {
+    const inputText = document.querySelector("#inputTextArea").value.trim();
+    const serials = inputText.split('\n');
+    let outputText = "";
+    serials.forEach(function(serial) {
+      const result = getTime(serial);
+      if (result) {
+        outputText += result.date + "\n";
+      }
+    });
+    document.getElementById('outputDisplay').innerText = outputText;
+  }
+
+  function getTime(serial) {
+
+    if (!serial.match(/^[0-9a-fA-F]+$/)) {
+      swal("错误", "序列号必须是16进制字符串", "error");
+      return null;
+    }
+
+    if (serial.length < 8) {
+      swal("错误", "序列号必须至少包含8位字符", "error");
+      return null;
+    }
+
+    const serialEightDigits = serial.substring(0, 8);
+    const timestamp = parseInt(serialEightDigits, 16);
+    const datetime = new Date(timestamp * 1000);
+    const formattedDateTime = datetime.toISOString().slice(0, 19).replace('T', ' ');
+    const result = {
+      year: datetime.getFullYear(),
+      month: ('0' + (datetime.getMonth() + 1)).slice(-2),
+      day: ('0' + datetime.getDate()).slice(-2),
+      hour: ('0' + datetime.getHours()).slice(-2),
+      minute: ('0' + datetime.getMinutes()).slice(-2),
+      second: ('0' + datetime.getSeconds()).slice(-2),
+      timestamp: timestamp,
+      date: formattedDateTime
+    };
+
+    return result;
+  }
+</script>
+</body>
+</html>
