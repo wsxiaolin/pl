@@ -21,6 +21,7 @@ jobs:
       - name: Fetch data from API
         id: fetch_data
         run: |
+          mkdir -p data
           response=$(curl -s https://physics-api-cn.turtlesim.com/Users)
           echo "$response" > data/${{ steps.datetime.outputs.datetime }}.json
 
