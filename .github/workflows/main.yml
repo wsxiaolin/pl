@@ -1,7 +1,6 @@
 name: Periodic Data Fetch and Save
 on:
   schedule:
-    # 中国标准时间（CST，UTC+08:00）每两小时从早上8点到晚上10点
     - cron: '0 */2 8-22 * *'
 
 jobs:
@@ -17,11 +16,16 @@ jobs:
         id: datetime
         run: echo "::set-output name=datetime::$(date +'%Y-%m-%d-%H%M%S')"
 
+      # 创建存储数据的目录和文件
+      - name: Create data directory and file
+        run: |
+          mkdir -p data
+          touch data/${{ steps.datetime.outputs.datetime }}.json
+
       # 执行 GET 请求并获取响应数据
       - name: Fetch data from API
         id: fetch_data
         run: |
-          mkdir -p data
           response=$(curl -s https://physics-api-cn.turtlesim.com/Users)
           echo "$response" > data/${{ steps.datetime.outputs.datetime }}.json
 
