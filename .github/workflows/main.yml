@@ -30,16 +30,9 @@ jobs:
           response=$(curl -s https://physics-api-cn.turtlesim.com/Users)
           echo "$response" > data/${{ steps.datetime.outputs.datetime }}.json
 
-      # 检查是否在 Git 仓库中，如果不是，则切换到仓库目录
-      - name: Check if in Git repository
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git rev-parse --show-toplevel
-          else
-            echo "Not in a Git repository"
-            exit 1
-          fi
-        continue-on-error: true
+      # 切换到 Git 仓库目录
+      - name: Switch to Git repository directory
+        run: cd ${{ github.workspace }}
 
       # 设置 Git 用户配置
       - name: Set Git user configuration
