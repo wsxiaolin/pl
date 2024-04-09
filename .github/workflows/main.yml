@@ -3,13 +3,11 @@ name: Periodic Data Fetch and Save
 on:
   schedule:
     - cron: '0 */2 8-22 * *'
-
   workflow_dispatch: # 允许手动触发执行
     inputs:
       manual_run:
         description: 'Trigger a manual run'
         default: 'true'
-
 
 jobs:
   fetch-and-store-data:
@@ -25,8 +23,17 @@ jobs:
             exit 1
           fi
 
+      - name: Print current directory
+        run: pwd
+
+      - name: List files in current directory
+        run: ls -la
+
       - name: Switch to Git repository directory
-        run: cd ${{ github.workspace }}
+        run: cd $GITHUB_WORKSPACE
+
+      - name: Print current directory after switch
+        run: pwd
 
       - name: Set Git user configuration
         run: |
