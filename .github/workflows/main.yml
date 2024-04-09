@@ -1,53 +1,66 @@
-name: Periodic Data Fetch and Save
+name: Fetch and Upload Data
+
 on:
   schedule:
-    - cron: '0 */2 8-22 * *'
-  workflow_dispatch: # 允许手动触发执行
-    inputs:
-      manual_run:
-        description: 'Trigger a manual run'
-        default: 'true'
+    - cron: "0 0,2,4,6,8,10,12,14,16,18,20 * * *"
+  # 如果需要手动触发，可以取消注释下面的部分
+  workflow_dispatch:
 
 jobs:
-  fetch-and-store-data:
+  fetch_and_upload_data:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Fetch data from API
-        run: |
-          mkdir -p data
-          if curl -sSf https://physics-api-cn.turtlesim.com/Users > data/$(date +'%Y-%m-%d-%H%M%S').json; then
-            echo "Data fetched successfully."
-          else
-            echo "Failed to fetch data from API."
-            exit 1
-          fi
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Print current directory
-        run: pwd
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14'
 
-      - name: List files in current directory
-        run: ls -la
+    - name: Install dependencies
+      run: npm install axios mysql
 
-      - name: Set Git user configuration
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+    - name: Fetch Data and Upload to Database
+      run: |
+        const axios = require('axios');
+        const mysql = require('mysql');
 
-      - name: Add data file to git
-        run: |
-          cd $GITHUB_WORKSPACE
-          if [ "$(ls -A data/*.json)" ]; then
-            git add data/*.json
-          else
-            echo "No data files found. Skipping git add."
-          fi
+        // 创建数据库连接
+        const connection = mysql.createConnection({
+          host: 'mysql.sqlpub.com',
+          user: 'wsxiaolin',
+          password: 'WG2qCjfkokKbNfOi',
+          database: 'plprojects'
+        });
 
-      - name: Commit and push changes
-        run: |
-          cd $GITHUB_WORKSPACE
-          if git diff --quiet; then
-            echo "No changes to commit. Skipping git commit and push."
-          else
-            git commit -m "Automated data update" -a
-            git push origin main
-          fi
+        // 连接数据库
+        connection.connect();
+
+        // 发送HTTP请求获取数据
+        axios.get('https://physics-api-cn.turtlesim.com/Users')
+          .then(response => {
+            const data = response.data;
+            // 在这里处理数据，可以将其插入数据库
+
+            // 构造SQL插入语句
+            const sql = 'INSERT INTO plstartpage (date, time, data) VALUES (?, ?, ?)';
+            const date = new Date().toISOString().slice(0, 10);
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+            // 执行SQL插入操作
+            connection.query(sql, [date, time, JSON.stringify(data)], (error, results, fields) => {
+              if (error) {
+                console.error('Error inserting data:', error);
+                throw error;
+              }
+              console.log('Data inserted successfully:', results);
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+          });
+
+        // 关闭数据库连接
+        connection.end();
