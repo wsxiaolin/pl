@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: "0 0,2,4,6,8,10,12,14,16,18,20 * * *"
   # 如果需要手动触发，可以取消注释下面的部分
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   fetch_and_upload_data:
