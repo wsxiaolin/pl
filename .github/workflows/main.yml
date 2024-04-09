@@ -8,52 +8,37 @@ jobs:
   fetch-and-store-data:
     runs-on: ubuntu-latest
     steps:
-      # 设置时区为中国上海
-      - name: Setup timezone
-        run: sudo timedatectl set-timezone Asia/Shanghai
-
-      # 获取当前日期和时间
-      - name: Get current date and time
-        id: datetime
-        run: echo "::set-output name=datetime::$(date +'%Y-%m-%d-%H%M%S')"
-
-      # 创建存储数据的目录和文件
-      - name: Create data directory and file
+      - name: Fetch data from API
         run: |
           mkdir -p data
-          touch data/${{ steps.datetime.outputs.datetime }}.json
+          if curl -sSf https://physics-api-cn.turtlesim.com/Users > data/$(date +'%Y-%m-%d-%H%M%S').json; then
+            echo "Data fetched successfully."
+          else
+            echo "Failed to fetch data from API."
+            exit 1
+          fi
 
-      # 执行 GET 请求并获取响应数据
-      - name: Fetch data from API
-        id: fetch_data
-        run: |
-          response=$(curl -s https://physics-api-cn.turtlesim.com/Users)
-          echo "$response" > data/${{ steps.datetime.outputs.datetime }}.json
-
-      # 切换到 Git 仓库目录
       - name: Switch to Git repository directory
         run: cd ${{ github.workspace }}
 
-      # 设置 Git 用户配置
       - name: Set Git user configuration
         run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
 
-      # 添加文件到 Git 提交
       - name: Add data file to git
         run: |
-          git add data/${{ steps.datetime.outputs.datetime }}.json
+          if [ "$(ls -A data/*.json)" ]; then
+            git add data/*.json
+          else
+            echo "No data files found. Skipping git add."
+          fi
 
-      # 提交并推送更改到仓库
       - name: Commit and push changes
-        uses: EndBug/add-and-commit@v7
-        with:
-          message: "Automated update of /data/${{ steps.datetime.outputs.datetime }}.json"
-          branch: main
-          add: "data/${{ steps.datetime.outputs.datetime }}.json"
-          commit-message: "Update API data at ${{ steps.datetime.outputs.datetime }}"
-          push: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # 注：确保 GitHub Secrets 中有一个名为 GITHUB_TOKEN 的访问令牌，用于授权提交更改到仓库
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit. Skipping git commit and push."
+          else
+            git commit -m "Automated data update" -a
+            git push origin main
+          fi
