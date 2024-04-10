@@ -2,8 +2,8 @@ name: Fetch and Upload Data
 
 on:
   schedule:
-    - cron: "0 0,2,4,6,8,10,12,14,16,18,20 * * *"
-  # 如果需要手动触发，可以取消注释下面的部分
+    - cron: "0 16,18,20,22,0,2,4,6,8,10,12 * * *"
+    
   workflow_dispatch:
 
 jobs:
