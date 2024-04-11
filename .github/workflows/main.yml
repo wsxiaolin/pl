@@ -2,8 +2,7 @@ name: Fetch and Upload Data
 
 on:
   schedule:
-    - cron: "0 16,18,20,22,0,2,4,6,8,10,12 * * *"
-    
+    - cron: "0 0-15,22,23 * * *"
   workflow_dispatch:
 
 jobs:
